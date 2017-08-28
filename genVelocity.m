@@ -1,0 +1,53 @@
+% generate velocity function:
+
+
+function [vx,vy] = genVelocity(veltype,vmax,rotation,vrad,x,y)
+% initialize velocity:
+% veltype options:
+% 1 = couette
+% 2 = poisuille
+% 3 = rankine
+% 4 = constant (useful for sticky bacteria)
+Nx = length(x);
+Ny = length(y);
+
+vxtmp = zeros(Nx,Ny);
+vytmp = zeros(Nx,Ny);
+
+PI = 3.1415926;
+%xcent = (x(end)-x(1))/2.0;
+%ycent = (y(end)-y(1))/2.0;
+% maybe recenter for rankine -- or can just change domain
+
+if veltype == 1
+    for yi = 1:Ny
+        maxrad = max(y(end-2),y(2));
+        vxtmp(:,yi) = (vmax/maxrad)*y(yi)*ones(Nx,1);
+    end
+elseif veltype == 2
+    for yi = 1:Ny
+        vxtmp(:,yi) = vmax*(1 - 0.5*((y(yi))^2)/(y(end-2)-y(2)))*ones(Nx,1);
+    end
+elseif veltype == 3
+    for i = 1:Ny
+        for j = 1:Nx
+            theta = atan2(y(i),x(j));
+            dist = sqrt(y(i)^2 + x(j)^2);
+            if dist <= vrad
+                inside = (rotation*dist)/(2*PI*vrad^2);
+                vxtmp(j,i) = (-sin(theta))*inside;
+                vytmp(j,i) = cos(theta)*inside;
+            else
+                outside = rotation/(2*PI*dist);
+                vxtmp(j,i) = (-sin(theta))*outside;
+                vytmp(j,i) = cos(theta)*outside;
+            end
+        end
+    end
+elseif veltype == 4
+    vxtmp(:,:) = vmax;
+end
+
+vx = vxtmp;
+vy = vytmp;
+end
